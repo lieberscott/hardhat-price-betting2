@@ -37,7 +37,7 @@ contract Market {
   // mapping(address => uint256) addressToPrediction; // prevent double bets
 
   event PredictionMade(address indexed predictor, uint256 indexed price);
-  event WinnerChosen(address indexed winner, uint256 indexed _amount, uint256 _asset, uint256 _time);
+  event WinnerChosen(address indexed winner, uint256 indexed _amount, uint256 _asset);
 
   constructor(uint256 _asset, uint256 _entryFee, uint256 _predictionCutoffTime, uint256 _expirationTime, address _priceFeed) payable {
     if (_expirationTime <= block.timestamp) {
@@ -74,7 +74,7 @@ contract Market {
 
    predictions.push(prediction(msg.sender, _price));
 
-   emit PredictionMade(mainAccount, _price);
+   emit PredictionMade(msg.sender, _price);
   }
 
   /**
@@ -94,18 +94,21 @@ contract Market {
 
     AggregatorV3Interface priceFeed = AggregatorV3Interface(i_priceFeed);
     (,int256 price,,,) = priceFeed.latestRoundData();
+
+    uint256 assetPrice = uint256(price * 1e10);
+    // int256 price = 2500;
     // return uint256(price * 1e10);
 
     // go through the array and find the person closest to the price
 
     // initialize the closestGuess to the first person in the array, then, below, go through the array and see if anyone has beaten them
-    uint256 closestDiff = getPriceDifference(predictions[0].priceGuess, uint256(price));
+    uint256 closestDiff = getPriceDifference(predictions[0].priceGuess, assetPrice);
     uint256 winnerIndex = 0;
 
     uint256 len = predictions.length;
 
     for (uint256 i = 0; i < len; i++) {
-      uint256 difference = getPriceDifference(predictions[i].priceGuess, uint256(price));
+      uint256 difference = getPriceDifference(predictions[i].priceGuess, assetPrice);
       // if there is a tie, the winner will be the first person who guessed
       if (difference < closestDiff) {
         closestDiff = difference;
@@ -125,7 +128,7 @@ contract Market {
       s_open = 2;
     }
 
-    emit WinnerChosen(predictions[winnerIndex].bettorAddress, amount, uint256(i_asset), block.timestamp);
+    emit WinnerChosen(predictions[winnerIndex].bettorAddress, amount, uint256(i_asset));
 
   }
 

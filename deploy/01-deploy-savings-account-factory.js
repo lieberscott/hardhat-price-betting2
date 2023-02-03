@@ -7,20 +7,22 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments;
     const { deployer } = await getNamedAccounts();
     const chainId = network.config.chainId;
-    let predictionMarketFactory;
+    let predictionMarketFactory, mockAddress
 
 
     log("----------------------------------------------------");
     log("getting mockV3Aggregator contracts...");
-    const mockV3AggregatorContracts = await deployments.get("MockV3Aggregator")
-    log(`mockV3Aggregator contracts : ${JSON.stringify(mockV3AggregatorContracts)}`)
-    const ethUsdPriceFeedAddress = mockV3AggregatorContracts.address;
-    log(`ethUsdPriceFeedAddress : ${ethUsdPriceFeedAddress[0].address}`);
+    const mockEthContract = await deployments.get("MockV3Aggregator_0")
+    const mockBtcContract = await deployments.get("MockV3Aggregator_1")
+    const mockDogeContract = await deployments.get("MockV3Aggregator_2")
+    log(`mockV3Aggregator contracts : ${mockEthContract.address, mockBtcContract.address, mockDogeContract.address}`)
     log("Deploying SavingsAccountFactory and waiting for confirmations...");
+
+
     predictionMarketFactory = await deploy("PredictionMarketFactory", {
         from: deployer,
         log: true,
-        args: ["0x0000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000002", "0x0000000000000000000000000000000000000003"],
+        args: [mockEthContract.address, mockBtcContract.address, mockDogeContract.address],
         // we need to wait if on a live network so we can verify properly
         waitConfirmations: network.config.blockConfirmations || 1,
     })
