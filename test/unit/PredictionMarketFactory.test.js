@@ -23,10 +23,6 @@ const { developmentChains } = require("../../helper-hardhat-config")
       })
 
       describe("constructor", function () {
-        it("sets the owner correctly", async () => {
-          const response = await predictionMarketFactory.getOwner()
-          assert.equal(response.toString(), deployer.address)
-        })
           
         it("sets a price feed address array", async () => {
           const response = await predictionMarketFactory.getPriceFeeds()
@@ -131,12 +127,21 @@ const { developmentChains } = require("../../helper-hardhat-config")
             })
 
             it("Successfully ends market", async () => {
+              let guess = 3000;
+              let numGuesses = 20;
               // make three predictions
-              await individualMarket.makePrediction(priceGuess, { value: sendValue })
               individualMarketAsAccountOne = individualMarket.connect(accountOne);
               individualMarketAsAccountTwo = individualMarket.connect(accountTwo);
-              await individualMarketAsAccountOne.makePrediction("3000", { value: sendValue })
-              await individualMarketAsAccountTwo.makePrediction("3500", { value: sendValue })
+
+              for (let i = 0; i < numGuesses; i++) {
+                await individualMarketAsAccountOne.makePrediction(guess.toString(), { value: sendValue })
+                guess += 500;
+              }
+
+              for (let j = 0; j < numGuesses; j++) {
+                await individualMarketAsAccountTwo.makePrediction(guess.toString(), { value: sendValue })
+                guess += 500
+              }
 
               const startingBalance = await ethers.provider.getBalance(accountTwo.address);
 
@@ -148,12 +153,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
                 individualMarket,
                 "WinnerChosen"
               )
-              .withArgs(accountTwo.address, (sendValue * 3).toString(), 1)
+              .withArgs(accountTwo.address, (sendValue * numGuesses * 2).toString(), 1)
 
               // Get the user's ending account balance
               const endingBalance = await ethers.provider.getBalance(accountTwo.address);
               
-              assert.equal(startingBalance.add("300000000000000000").toString(), endingBalance.toString());
+              assert.equal(startingBalance.add(sendValue.mul(numGuesses).mul(2)).toString(), endingBalance.toString());
               
             })
           })

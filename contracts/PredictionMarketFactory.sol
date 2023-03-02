@@ -3,27 +3,34 @@
 pragma solidity ^0.8.0;
 
 import "./Market.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 error PredictionMarket__IneligiblePredictionCutoffTime();
 error PredictionMarket__IneligibleExpirationTime();
 error PredictionMarket__NotEnoughEth();
 error PredictionMarket__PredictionsClosed();
+error PredictionMarket__NotOwner();
+error PredictionMarket__CallFailed();
 
 
 contract PredictionMarketFactory {
 
-  address public immutable i_owner;
-
   address[] private i_priceFeeds; // 0: ethUsd, 1: btcUsd, 2: dogeUsd
+  address private immutable i_owner;
   mapping(uint256 => address) markets;
   uint256 private numMarkets;
 
   event MarketCreated(address indexed marketCreator, uint256 indexed asset, uint256 entryFee, uint256 predictionCutoffTime, uint256 expirationTime);
 
+
+  modifier onlyOwner() {
+    // require(msg.sender == i_owner);
+    if (msg.sender != i_owner) revert PredictionMarket__NotOwner();
+    _;
+  }
+
   constructor (address _ethUsdPriceFeed, address _btcUsdPriceFeed, address _dogeUsdPriceFeed) {
-    i_owner = msg.sender;
     numMarkets = 0;
+    i_owner = msg.sender;
     i_priceFeeds.push(_ethUsdPriceFeed);
     i_priceFeeds.push(_btcUsdPriceFeed);
     i_priceFeeds.push(_dogeUsdPriceFeed);
@@ -64,10 +71,13 @@ contract PredictionMarketFactory {
 
   }
 
-  function getOwner() public view returns (address) {
-    return i_owner;
-  }
+  function withdraw() payable public onlyOwner {
+    (bool success, ) = i_owner.call{value: address(this).balance}("");
 
+    if (!success) {
+      revert PredictionMarket__CallFailed();
+    }
+  }
 
   function getMarket(uint256 _index) public view returns (address) {
     return markets[_index];
@@ -80,9 +90,5 @@ contract PredictionMarketFactory {
   function getNumMarkets() public view returns (uint256) {
     return numMarkets;
   }
-
-  // function destroy() public payable onlyOwner {
-  //   selfdestruct(payable(i_owner));
-  // }
 
 }

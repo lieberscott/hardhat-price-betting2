@@ -11,21 +11,21 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     // If we are on a local development network, we need to deploy mocks!
     if (chainId == 31337) {
         log("Local network detected! Deploying mocks...")
-        await deploy("MockV3Aggregator_0", {
+        await deploy("MockV3Aggregator_ETH", {
             contract: "MockV3Aggregator",
             from: deployer,
             log: true,
             args: [DECIMALS, INITIAL_ETH_PRICE],
         })
 
-        await deploy("MockV3Aggregator_1", {
+        await deploy("MockV3Aggregator_BTC", {
             contract: "MockV3Aggregator",
             from: deployer,
             log: true,
             args: [DECIMALS, INITIAL_BTC_PRICE],
         })
 
-        await deploy("MockV3Aggregator_2", {
+        await deploy("MockV3Aggregator_DOGE", {
             contract: "MockV3Aggregator",
             from: deployer,
             log: true,

@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
 error Market__MustExpireInFuture();
 error Market__PredictionsClosed();
@@ -11,6 +10,7 @@ error Market__Ended();
 error Market__ExpirationTimeNotReached();
 error Market__NotEnoughEth();
 error Market__PayoutFailed();
+error Market__StillOpen();
 
 
 /** @title A prediction market for crypto prices
@@ -82,7 +82,7 @@ contract Market {
    */
   function endMarket() public payable {
 
-    if (s_open == 1 || s_open == 2) {
+    if (s_open == 1) {
       revert Market__Ended();
     }
 
@@ -96,8 +96,6 @@ contract Market {
     (,int256 price,,,) = priceFeed.latestRoundData();
 
     uint256 assetPrice = uint256(price * 1e10);
-    // int256 price = 2500;
-    // return uint256(price * 1e10);
 
     // go through the array and find the person closest to the price
 
@@ -123,9 +121,6 @@ contract Market {
 
     if (!callSuccess) {
       revert Market__PayoutFailed();
-    }
-    else {
-      s_open = 2;
     }
 
     emit WinnerChosen(predictions[winnerIndex].bettorAddress, amount, uint256(i_asset));
@@ -175,9 +170,5 @@ contract Market {
   function getPriceFeed() public view returns (address) {
     return i_priceFeed;
   }
-
-  // function destroy() public payable onlyOwner {
-  //   selfdestruct()
-  // }
 
 }
