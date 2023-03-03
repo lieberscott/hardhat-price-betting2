@@ -78,7 +78,7 @@ contract Market {
   }
 
   /**
-   * @notice once the market prediction date has arrived, anyone can call this function to get the current price
+   * @notice once the market prediction date has arrived, anyone can call this function to get the current price and pay the winner
    */
   function endMarket() public payable {
 
