@@ -50,6 +50,23 @@ const { developmentChains } = require("../../helper-hardhat-config")
         })
       })
 
+      describe("add market", function () {
+          
+        const linkUsdPriceFeedGoerli = "0xd28Ba6CA3bB72bF371b80a2a0a33cBcf9073C954";
+
+        it("can add a new price feed", async () => {
+          const response0 = await predictionMarketFactory.addNewFeed(linkUsdPriceFeedGoerli);
+          const response = await predictionMarketFactory.getPriceFeeds();
+          assert.equal(response.length, 4);
+        });
+
+        it("rejects price feed from non-owner account", async () => {
+          factoryContractAsAccountOne = predictionMarketFactory.connect(accountOne);
+          await expect(factoryContractAsAccountOne.addNewFeed(linkUsdPriceFeedGoerli)).to.be.revertedWith("PredictionMarket__NotOwner");
+        });
+
+      })
+
       describe("eth contract", function () {
         let individualMarket;
         const entryFee = "100000000000000000"; // 0.1
@@ -62,7 +79,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           const expirationTime = secondsSinceEpoch + (60 * 60 * 2);
           await predictionMarketFactory.createMarket(asset, entryFee, predictionCutoffTime.toString(), expirationTime.toString())
 
-          const marketAddress = await predictionMarketFactory.getMarket("0");
+          const marketAddress = await predictionMarketFactory.getMarket("8"); // `8` because 0-7 are deployed in the deploy script
 
           // create a connection to the generic Market.sol contract
           market = await ethers.getContractFactory("Market");
@@ -73,7 +90,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           // could also do assert.fail
           it("Correctly has one market", async () => {
             const numMarkets = await predictionMarketFactory.getNumMarkets()
-            assert.equal(numMarkets.toString(), "1")
+            assert.equal(numMarkets.toString(), "9"); // this is "9" because there are 8 in the deploy script, plus one more in the `beforeEach` above
           })
           
           it("Correctly inherets the right priceFeed", async () => {

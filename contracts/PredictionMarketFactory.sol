@@ -14,7 +14,7 @@ error PredictionMarket__CallFailed();
 
 contract PredictionMarketFactory {
 
-  address[] private i_priceFeeds; // 0: ethUsd, 1: btcUsd, 2: dogeUsd
+  address[] private s_priceFeeds; // 0: ethUsd, 1: btcUsd, 2: dogeUsd
   address private immutable i_owner;
   mapping(uint256 => address) markets;
   uint256 private numMarkets;
@@ -31,9 +31,9 @@ contract PredictionMarketFactory {
   constructor (address _ethUsdPriceFeed, address _btcUsdPriceFeed, address _dogeUsdPriceFeed) {
     numMarkets = 0;
     i_owner = msg.sender;
-    i_priceFeeds.push(_ethUsdPriceFeed);
-    i_priceFeeds.push(_btcUsdPriceFeed);
-    i_priceFeeds.push(_dogeUsdPriceFeed);
+    s_priceFeeds.push(_ethUsdPriceFeed);
+    s_priceFeeds.push(_btcUsdPriceFeed);
+    s_priceFeeds.push(_dogeUsdPriceFeed);
   }
 
   /**
@@ -61,7 +61,7 @@ contract PredictionMarketFactory {
 
 
     // this is a way to extract the contract address from the returned value
-    address _marketAddress = address((new Market){value: msg.value}(_asset, _entryFee, _predictionCutoffTime, _expirationTime, i_priceFeeds[_asset]));
+    address _marketAddress = address((new Market){value: msg.value}(_asset, _entryFee, _predictionCutoffTime, _expirationTime, s_priceFeeds[_asset]));
 
     markets[numMarkets] = _marketAddress;
 
@@ -69,6 +69,14 @@ contract PredictionMarketFactory {
 
     emit MarketCreated(msg.sender, _asset, _entryFee, _predictionCutoffTime, _expirationTime);
 
+  }
+
+  /**
+   * @notice this function adds a new asset to the list of predictible assets
+   * @param _newPriceFeed new asset feed
+   */
+  function addNewFeed(address _newPriceFeed) public onlyOwner {
+    s_priceFeeds.push(_newPriceFeed);
   }
 
   function withdraw() payable public onlyOwner {
@@ -84,7 +92,7 @@ contract PredictionMarketFactory {
   }
 
   function getPriceFeeds() public view returns (address[] memory) {
-    return i_priceFeeds;
+    return s_priceFeeds;
   }
 
   function getNumMarkets() public view returns (uint256) {
